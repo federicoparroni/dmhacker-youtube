@@ -5,34 +5,32 @@ const ytwrappers = require('./youtube_wrappers.js')
 
 const YOUTUBE_URL_PREFIX = "https://www.youtube.com/watch?v=";
 
-function fetch_target_id(req, res) {
+async function fetch_target_id(req, res) {
   let id = req.params.id;
   let url = YOUTUBE_URL_PREFIX + id;
 
-  ytdl.getInfo(url, function(err, info) {
-    if (err) {
-      res.status(500).json({
-        state: 'error',
-        message: err.message
+  try {
+    const info = await ytdl.getInfo(url);
+    let output_file = path.join(__dirname, '..', 'public', 'site', id + '.mp4');
+    let writer = fs.createWriteStream(output_file);
+    writer.on('finish', function() {
+      res.status(200).json({
+        state: 'success',
+        link: '/site/' + id + '.mp4',
+        info: {
+          id: id,
+          title: info.videoDetails.title
+        }
       });
-    } else {
-      let output_file = path.join(__dirname, '..', 'public', 'site', id + '.mp4');
-      let writer = fs.createWriteStream(output_file);
-      writer.on('finish', function() {
-        res.status(200).json({
-          state: 'success',
-          link: '/site/' + id + '.mp4',
-          info: {
-            id: id,
-            title: info.title
-          }
-        });
-      });
-      ytdl(url).pipe(writer);
-    }
-  });
+    });
+    ytdl(url).pipe(writer);
+  } catch (err) {
+    res.status(500).json({
+      state: 'error',
+      message: err.message
+    });
+  }
 }
-
 
 module.exports = function(app) {
   app.get('/target/:id', fetch_target_id);
@@ -46,6 +44,7 @@ module.exports = function(app) {
         message: 'No results found'
       });
     } else {
+      console.log('Video found:')
       console.log(result);
       req.params.id = result.id;
       fetch_target_id(req, res);
