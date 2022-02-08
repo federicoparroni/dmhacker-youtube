@@ -11,6 +11,9 @@ async function fetch_target_id(req, res) {
 
   try {
     const info = await ytdl.getInfo(url);
+    console.log('Video info collected:');
+    console.log(info);
+
     let output_file = path.join(__dirname, '..', 'public', 'site', id + '.mp4');
     let writer = fs.createWriteStream(output_file);
     writer.on('finish', function() {
@@ -23,6 +26,7 @@ async function fetch_target_id(req, res) {
         }
       });
     });
+    console.log(`Writing video on: ${output_file}`)
     ytdl(url).pipe(writer);
   } catch (err) {
     res.status(500).json({
