@@ -7,10 +7,6 @@ npm-debug.log
 *.dev
 .DS_Store
 
-# Docker
-Dockerfile
-docker-compose.yml
-
 # Video or audio files 
 *.mp4
 *.mp3
